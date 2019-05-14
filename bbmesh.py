@@ -101,6 +101,51 @@ def traverse_faces(bm, function, start=None, mask=None):
     return new_faces
 
 
+def traverse_faces_limit_plane(bm, function, threshold, start=None, mask=None):
+    if mask is not None:
+        non_traversed = np.nonzero(mask == False)  # noqa: E712
+    else:
+        non_traversed = np.ones(len(bm.faces))
+        mask = np.zeros(len(bm.faces), dtype=np.bool)
+
+    if start is None:
+        others = [bm.faces[non_traversed[0][0]]]
+    else:
+        others = [bm.faces[start]]
+
+    new_faces = []
+    while others != []:
+        new_faces.extend(others)
+
+        # calc limit plane normal
+        u, s, vh = np.linalg.svd(np.array([f.normal for f in new_faces])[:100])
+        normal = vh[2, :]
+
+        step = []
+        for f in others:
+            if mask[f.index] == False:  # noqa: E712
+                mask[f.index] = True
+                for e in f.edges:
+                    if len(e.link_faces) == 2 and function(e) and np.abs(np.dot(normal, f.normal)) < threshold:
+                        # append the other face
+                        lf = e.link_faces
+                        step.append(lf[0] if lf[0] != f else lf[1])
+        others = step
+
+    return new_faces
+
+
+def other_face(e, face):
+    if face == e.link_faces[0]:
+        return e.link_faces[1]
+    else:
+        return e.link_faces[0]
+
+
+def face_faces(face):
+    return [other_face(e, face) for e in face.link_edges]
+
+
 def faces_verts(faces):
     return {v for f in faces for v in f.verts}
 
