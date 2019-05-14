@@ -72,6 +72,35 @@ def get_nonmanifold_verts(mesh):
 # Mesh connection ops
 
 
+def traverse_faces(bm, function, start=None, mask=None):
+    if mask is not None:
+        non_traversed = np.nonzero(mask == False)  # noqa: E712
+    else:
+        non_traversed = np.ones(len(bm.faces))
+        mask = np.zeros(len(bm.faces), dtype=np.bool)
+
+    if start is None:
+        others = [bm.faces[non_traversed[0][0]]]
+    else:
+        others = [bm.faces[start]]
+
+    new_faces = []
+    while others != []:
+        new_faces.extend(others)
+        step = []
+        for f in others:
+            if mask[f.index] == False:  # noqa: E712
+                mask[f.index] = True
+                for e in f.edges:
+                    if len(e.link_faces) == 2 and function(e):
+                        # append the other face
+                        lf = e.link_faces
+                        step.append(lf[0] if lf[0] != f else lf[1])
+        others = step
+
+    return new_faces
+
+
 def faces_verts(faces):
     return {v for f in faces for v in f.verts}
 
