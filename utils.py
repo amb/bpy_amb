@@ -37,3 +37,11 @@ def profiling_end(pr):
     ps = pstats.Stats(pr, stream=s)
     ps.strip_dirs().sort_stats(sortby).print_stats(20)
     print(s.getvalue())
+
+
+def rotate_object(obj, q, point):
+    R = q.to_matrix().to_4x4()
+    T = mu.Matrix.Translation(point)
+    M = T @ R @ T.inverted()
+    obj.location = M @ obj.location
+    obj.rotation_euler.rotate(M)
