@@ -193,7 +193,6 @@ def mesh_get_shells(bm):
     while np.any(traversed == False):
         location = np.nonzero(traversed == False)[0][0]
         others = [bm.verts[location]]
-
         shells.append([])
         while others != []:
             shells[-1].extend(others)
@@ -228,6 +227,9 @@ def mesh_get_edge_connection_shells(bm):
                             linked_faces.append([i for i in e.link_faces if i != f][0])
                     step.extend(linked_faces)
             others = step
+
+        # only uniques
+        shells[-1] = list(set(shells[-1]))
     return shells
 
 
