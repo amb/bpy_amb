@@ -189,6 +189,15 @@ def calc_curvature(fastverts, fastedges, fastnorms):
     return np.arccos(vecsums / connections) / np.pi
 
 
+def divnp(a, b):
+    if a.shape[1] == 1:
+        return a / b
+    else:
+        for n in range(a.shape[1]):
+            a[:, n] /= b
+        return a
+
+
 def mesh_smooth_filter_variable(data, fastverts, fastedges, iterations):
     """ Smooths variables in data [0, 1] over the mesh topology """
     # vert indices of edges

@@ -13,9 +13,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-
+from collections import defaultdict
 import numpy as np
-import bmesh  # pylint: disable=import-error
+import bmesh
 from . import fastmesh as afm
 
 
@@ -310,6 +310,19 @@ def bmesh_fill_from_loops(bm, loops):
             leftover_loops.append(l)
 
     return new_faces, leftover_loops
+
+
+def mark_seams_from_charts(bm, new_faces):
+    # mark seams from charts
+    for chart in new_faces:
+        edges = defaultdict(int)
+        for f in chart:
+            for e in f.edges:
+                edges[e.index] += 1
+
+        for k, v in edges.items():
+            if v == 1:
+                bm.edges[k].seam = True
 
 
 def bmesh_deselect_all(bm):
