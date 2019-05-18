@@ -13,7 +13,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-
+import bpy
 import cProfile
 import pstats
 import io
@@ -49,6 +49,24 @@ class Profile_this:
 
     def __exit__(self, type, value, traceback):
         profiling_end(self.profile)
+
+
+class Mode_set:
+    def __init__(self, mode):
+        self.prev_mode = bpy.context.object.mode
+        self.changed = True
+
+        if self.prev_mode != mode:
+            bpy.ops.object.mode_set(mode=mode)
+        else:
+            self.changed = False
+
+    def __enter__(self):
+        return self.prev_mode
+
+    def __exit__(self, type, value, traceback):
+        if self.changed:
+            bpy.ops.object.mode_set(mode=self.prev_mode)
 
 
 def rotate_object(obj, q, point):

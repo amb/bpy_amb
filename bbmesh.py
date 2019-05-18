@@ -69,9 +69,6 @@ def get_nonmanifold_verts(mesh):
     return res
 
 
-# Mesh connection ops
-
-
 def traverse_faces(bm, function, start=None, mask=None):
     if mask is not None:
         non_traversed = np.nonzero(mask == False)  # noqa: E712
@@ -84,6 +81,8 @@ def traverse_faces(bm, function, start=None, mask=None):
     else:
         others = [bm.faces[start]]
 
+    t_edges = np.zeros(len(bm.edges), dtype=np.bool)
+
     new_faces = []
     while others != []:
         new_faces.extend(others)
@@ -92,6 +91,11 @@ def traverse_faces(bm, function, start=None, mask=None):
             if mask[f.index] == False:  # noqa: E712
                 mask[f.index] = True
                 for e in f.edges:
+                    if t_edges[e.index]:
+                        continue
+                    else:
+                        t_edges[e.index] = True
+
                     if len(e.link_faces) == 2 and function(e):
                         # append the other face
                         lf = e.link_faces
@@ -331,6 +335,51 @@ def bmesh_deselect_all(bm):
 
     for e in bm.edges:
         e.select = False
+
+
+def grow_uv_selection(bm, uv_layer, polys, selected, steps):
+    """ Grow UV selection """
+    connections = defaultdict(set)
+    for fi in polys:
+        f = bm.faces[fi]
+        for l in f.loops:
+            l1 = l
+            l2 = l.link_loop_next
+            uv1 = tuple(l1[uv_layer].uv)
+            uv2 = tuple(l2[uv_layer].uv)
+            connections[uv1].add(l2)
+            connections[uv2].add(l1)
+
+    for _ in range(steps):
+        selected = set(selected)
+        growth = []
+        for s in selected:
+            for c in connections[s]:
+                growth.append(c)
+        growth = set(growth)
+
+        selected = []
+        for g in growth:
+            selected.append(tuple(g[uv_layer].uv))
+            g[uv_layer].select = True
+
+
+def edge_same_uv(e0, uv_layer):
+    # TODO: nonmanifold mesh
+
+    # if len(e0.link_loops) != 2:
+    #     return False
+
+    loop0, loop1 = e0.link_loops
+
+    # ASSUMPTION: loop always goes the same direction (link_loop_next)
+    a0, a1 = loop0[uv_layer].uv, loop0.link_loop_next[uv_layer].uv
+    b0, b1 = loop1[uv_layer].uv, loop1.link_loop_next[uv_layer].uv
+
+    if (a0 == b0 and a1 == b1) or (a0 == b1 and a1 == b0):
+        return True
+    else:
+        return False
 
 
 class Bmesh_from_edit:
