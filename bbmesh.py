@@ -71,15 +71,15 @@ def get_nonmanifold_verts(mesh):
     return res
 
 
-def traverse_faces(bm, function, start=None, mask=None):
+def traverse_faces(bm, function, start=None, mask=None, mark_face=False):
     if mask is not None:
-        non_traversed = np.nonzero(mask == False)  # noqa: E712
+        non_traversed = np.nonzero(mask == False)[0]  # noqa: E712
     else:
-        non_traversed = np.ones(len(bm.faces))
+        non_traversed = [0]
         mask = np.zeros(len(bm.faces), dtype=np.bool)
 
     if start is None:
-        others = [bm.faces[non_traversed[0][0]]]
+        others = [bm.faces[non_traversed[0]]]
     else:
         others = [bm.faces[start]]
 
@@ -95,16 +95,26 @@ def traverse_faces(bm, function, start=None, mask=None):
                 for e in f.edges:
                     if t_edges[e.index]:
                         continue
-                    else:
-                        t_edges[e.index] = True
 
-                    if len(e.link_faces) == 2 and function(e):
-                        # append the other face
-                        lf = e.link_faces
-                        step.append(lf[0] if lf[0] != f else lf[1])
+                    t_edges[e.index] = True
+
+                    # traverse only manifold
+                    if len(e.link_faces) == 2:
+                        if function(e, f):
+                            # append the other face
+                            lf = e.link_faces
+                            step.append(lf[0] if lf[0] != f else lf[1])
+                        # TODO: figure out if this actually works right
+                        elif mark_face:
+                            # mark all edges in face as untraversable
+                            lf = e.link_faces
+                            o = lf[0] if lf[0] != f else lf[1]
+                            mask[o.index] = True
+                            for f_e in o.edges:
+                                t_edges[f_e.index] = True
         others = step
 
-    return new_faces
+    return new_faces, t_edges
 
 
 def traverse_faces_limit_plane(bm, function, threshold, start=None, mask=None):
@@ -341,6 +351,7 @@ def bmesh_deselect_all(bm):
 
 def grow_uv_selection(bm, uv_layer, polys, selected, steps):
     """ Grow UV selection """
+    # TODO: this is really ad hoc
     connections = defaultdict(set)
     for fi in polys:
         f = bm.faces[fi]
@@ -364,6 +375,20 @@ def grow_uv_selection(bm, uv_layer, polys, selected, steps):
         for g in growth:
             selected.append(tuple(g[uv_layer].uv))
             g[uv_layer].select = True
+
+
+def grow_uv_to_faces(bm, uv_layer):
+    """ Grow UV selection to faces """
+    for f in bm.faces:
+        mark_all = False
+        for l in f.loops:
+            if l[uv_layer].select:
+                mark_all = True
+                break
+
+        if mark_all:
+            for l in f.loops:
+                l[uv_layer].select = True
 
 
 def edge_same_uv(e0, uv_layer):

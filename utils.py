@@ -87,6 +87,7 @@ def kmeans_pp(data, charts, steps, pp=True):
         for _ in range(charts):
             # 2. For each data point x, compute D(x), the distance between x and the nearest
             #    center that has already been chosen.
+            # TODO: do this entirely in numpy
             dist = []
             for ict in bmf:
                 dist.append(np.sum(np.abs(data[ict] - data), axis=1))
