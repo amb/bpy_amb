@@ -200,6 +200,10 @@ def divnp(a, b):
 
 def mesh_smooth_filter_variable(data, fastverts, fastedges, iterations):
     """ Smooths variables in data [0, 1] over the mesh topology """
+
+    if iterations <= 0:
+        return data
+
     # vert indices of edges
     edge_a, edge_b = fastedges[:, 0], fastedges[:, 1]
     tvlen = np.linalg.norm(fastverts[edge_b] - fastverts[edge_a], axis=1)
