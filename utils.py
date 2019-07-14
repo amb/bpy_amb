@@ -110,7 +110,8 @@ def kmeans_pp(data, charts, steps, pp=True):
             bmf.append(np.argmax(dist))
 
         # 4. Repeat Steps 2 and 3 until k centers have been chosen.
-        # 5. Now that the initial centers have been chosen, proceed using standard k-means clustering.
+        # 5. Now that the initial centers have been chosen, proceed using standard
+        #    k-means clustering.
     else:
         # faster init, with random variables, no plus plus portion of the algorithm applied
         for _ in range(charts):

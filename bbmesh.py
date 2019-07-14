@@ -142,7 +142,11 @@ def traverse_faces_limit_plane(bm, function, threshold, start=None, mask=None):
             if mask[f.index] == False:  # noqa: E712
                 mask[f.index] = True
                 for e in f.edges:
-                    if len(e.link_faces) == 2 and function(e) and np.abs(np.dot(normal, f.normal)) < threshold:
+                    if (
+                        len(e.link_faces) == 2
+                        and function(e)
+                        and np.abs(np.dot(normal, f.normal)) < threshold
+                    ):
                         # append the other face
                         lf = e.link_faces
                         step.append(lf[0] if lf[0] != f else lf[1])
@@ -277,7 +281,9 @@ def bmesh_get_boundary_edgeloops_from_selected(bm):
 def bmesh_vertloop_from_edges(edges):
     res = [edges[0]]
     verts = []
-    while len(res) < len(edges) and (len(verts) < 3 or verts[-1] != verts[0] and verts[-1] != verts[-2]):
+    while len(res) < len(edges) and (
+        len(verts) < 3 or verts[-1] != verts[0] and verts[-1] != verts[-2]
+    ):
         r = res[-1]
 
         e0 = [e for e in r.verts[0].link_edges if e != r and e in edges]
