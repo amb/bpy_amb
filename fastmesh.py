@@ -191,6 +191,31 @@ def calc_curvature(fastverts, fastedges, fastnorms):
     return np.arccos(vecsums / connections) / np.pi
 
 
+def calc_curvature_vector(fastverts, fastedges, fastnorms):
+    """ Calculates curvature vectors for specified mesh """
+    edge_a, edge_b = fastedges[:, 0], fastedges[:, 1]
+
+    tvec = fastverts[edge_b] - fastverts[edge_a]
+    tvlen = np.linalg.norm(tvec, axis=1)
+
+    # normalize vectors
+    ntvec = (tvec.T / tvlen).T
+
+    # adjust the minimum of what is processed
+    vecsums = np.zeros(fastverts.shape, dtype=np.float)
+
+    total = ((np.einsum("ij,ij->i", ntvec, fastnorms[edge_a])) * -tvec.T).T
+    print("tshape", total.shape)
+    for i, v in enumerate(edge_a):
+        vecsums[v] += total[i]
+
+    total = ((np.einsum("ij,ij->i", -ntvec, fastnorms[edge_b])) * tvec.T).T
+    for i, v in enumerate(edge_b):
+        vecsums[v] += total[i]
+
+    return vecsums
+
+
 def divnp(a, b):
     if a.shape[1] == 1:
         return a / b
