@@ -75,13 +75,14 @@ def get_nonmanifold_verts(mesh):
 
 def traverse_faces(bm, function, start=None, mask=None, mark_face=False):
     if mask is not None:
-        non_traversed = np.nonzero(mask == False)[0]  # noqa: E712
+        non_traversed = (mask == False).argmax(axis=0)  # noqa: E712
+        # non_traversed = np.nonzero(mask == False)[0]  # noqa: E712
     else:
-        non_traversed = [0]
+        non_traversed = 0
         mask = np.zeros(len(bm.faces), dtype=np.bool)
 
     if start is None:
-        others = [bm.faces[non_traversed[0]]]
+        others = [bm.faces[non_traversed]]
     else:
         others = [bm.faces[start]]
 
@@ -101,7 +102,7 @@ def traverse_faces(bm, function, start=None, mask=None, mark_face=False):
                     t_edges[e.index] = True
 
                     # traverse only manifold
-                    if len(e.link_faces) == 2:
+                    if e.is_contiguous:
                         if function(e, f):
                             # append the other face
                             lf = e.link_faces
@@ -402,7 +403,7 @@ def grow_uv_to_faces(bm, uv_layer):
 def edge_same_uv(e0, uv_layer):
     # TODO: nonmanifold mesh
 
-    # if len(e0.link_loops) != 2:
+    # if not e0.is_contiguous:
     #     return False
 
     loop0, loop1 = e0.link_loops

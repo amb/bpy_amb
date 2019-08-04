@@ -63,6 +63,7 @@ def profiling_end(pr):
     print(s.getvalue())
 
 
+# with Profile_this
 class Profile_this:
     def __init__(self):
         self.profile = profiling_start()
@@ -74,6 +75,7 @@ class Profile_this:
         profiling_end(self.profile)
 
 
+# with Mode_set
 class Mode_set:
     def __init__(self, mode):
         self.prev_mode = bpy.context.object.mode
