@@ -16,8 +16,6 @@ Created Date: Sunday, July 14th 2019, 1:10:18 pm
 Copyright: Tommi Hyppänen
 """
 
-print("Import: raycast.py")
-
 import mathutils.bvhtree as bvht
 import mathutils as mu
 

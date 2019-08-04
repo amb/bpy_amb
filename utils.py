@@ -13,8 +13,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-print("Import: utils.py")
-
 import bpy
 import cProfile
 import pstats
@@ -22,20 +20,41 @@ import io
 import numpy as np
 
 
-def keep_updated(lc, libs):
+# TODO:
+# implement proper handling of "from X import Y as Z" handling
+# instead of just a few specific cases
+def keep_updated(lc, libs, verbose=False):
     nm = lc["__name__"]
     ilib = lc["importlib"]
     for l in libs:
+        # parse path
         o = l.split("/")
+        m = None
+        p = ""
         if len(o) == 2:
             p, m = o
         else:
             m = o[0]
+        assert m is not None
 
-        if m not in lc:
-            ilib.import_module("." + m, nm + p)
+        # parse alias
+        o = m.split("@")
+        load_as = o[0]
+        if len(o) == 2:
+            m, load_as = o
         else:
-            ilib.reload(lc[m])
+            m = o[0]
+
+        # import
+        if load_as not in lc:
+            if verbose:
+                print("[bpy_amb.keep_updated] Import:", ("." + m, nm + p))
+            temp = ilib.import_module("." + m, nm + p)
+            lc[load_as] = temp
+        else:
+            if verbose:
+                print("[bpy_amb.keep_updated] Reload:", load_as)
+            lc[load_as] = ilib.reload(lc[load_as])
 
 
 def install_lib(libname):
