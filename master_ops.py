@@ -95,7 +95,8 @@ class PanelBuilder:
 
                     for cat in this.draw_order.keys():
                         col = mcol.box().column(align=True)
-                        col.label(text=cat)
+                        if len(cat) > 0:
+                            col.label(text=cat)
                         for mop in this.draw_order[cat]:
                             split = col.split(factor=0.15, align=True)
                             opname = "panel_" + mop.prefix
