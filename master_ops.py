@@ -34,8 +34,6 @@ class PanelBuilder:
                 # copy property values from panel to operator
                 if self.prefix != "":
                     for p in self.my_props:
-                        # opname = self.parent_name + "_" + self.prefix + "_" + p
-                        # print(opname)
                         opname = self.prefix + "_" + p
                         panel_value = getattr(pgroup, opname)
                         setattr(self, p, panel_value)
@@ -120,7 +118,6 @@ class PanelBuilder:
                                     # if i % 2 == 0:
                                     #     row = box.row(align=True)
                                     row = box.row(align=True)
-                                    # row.prop(context.scene, mop.opname + "_" + p)
                                     row.prop(pgroup, mop.prefix + "_" + p)
 
             return _pt
