@@ -22,7 +22,20 @@ import io
 import numpy as np
 
 
-# TODO: with aut.set_mode("OBJECT")  # OBJECT, EDIT ...
+def keep_updated(lc, libs):
+    nm = lc["__name__"]
+    ilib = lc["importlib"]
+    for l in libs:
+        o = l.split("/")
+        if len(o) == 2:
+            p, m = o
+        else:
+            m = o[0]
+
+        if m not in lc:
+            ilib.import_module("." + m, nm + p)
+        else:
+            ilib.reload(lc[m])
 
 
 def install_lib(libname):
