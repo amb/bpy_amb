@@ -136,10 +136,12 @@ class PanelBuilder:
             bpy.utils.register_class(mesh_op.op)
             for k, v in mesh_op.props.items():
                 ConstructedPG.__annotations__[mesh_op.prefix + "_" + k] = v
+                # print("pm:", mesh_op.prefix, "_", k, "=", v)
 
         # register panel values
         for k, v in self.panel.items():
             ConstructedPG.__annotations__["panel_" + k] = v
+            # print("pi:", "panel_", k, "=", v)
 
         # register panel
         bpy.utils.register_class(self.panel_class)

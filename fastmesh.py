@@ -112,22 +112,6 @@ def safe_bincount(data, weights, dts, conn):
     return (dts, conn)
 
 
-def op_fraggle(mesh, thres, n):
-    verts = read_verts(mesh)
-    edges = read_edges(mesh)
-    edge_a, edge_b = edges[:, 0], edges[:, 1]
-    # for i in range(len(edge_a)):
-    #    fastverts[edge_a[i]] += tvec[i]*thres
-    #    fastverts[edge_b[i]] -= tvec[i]*thres
-    for _ in range(n):
-        tvec = verts[edge_b] - verts[edge_a]
-        # tvlen = np.linalg.norm(tvec, axis=1)
-        # tvec = (tvec.T / tvlen).T
-        verts[edge_a] += tvec * thres
-        verts[edge_b] -= tvec * thres
-    write_verts(mesh, verts)
-
-
 def op_smooth_mask(verts, edges, mask, n):
     # for e in edges:
     #    edge_c[e[0]] += 1
