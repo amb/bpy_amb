@@ -278,7 +278,9 @@ def mesh_smooth_filter_variable_limit(data, fastverts, fastedges, iterations, li
     # vert indices of edges
     edge_a, edge_b = fastedges[:, 0], fastedges[:, 1]
     tvlen = np.linalg.norm(fastverts[edge_b] - fastverts[edge_a], axis=1)
-    edgelength = np.where(tvlen < 1, 1.0, tvlen)
+    # coeff = 1.0 / (1.0 + tvlen / np.max(tvlen))
+    # coeff = (1.0 / (0.00001 + tvlen / np.max(tvlen)))
+    coeff = 1.0 - (tvlen / np.max(tvlen))
 
     data_sums = np.zeros(data.shape, dtype=np.float)
     connections = np.zeros(data.shape[0], dtype=np.float)
@@ -293,11 +295,11 @@ def mesh_smooth_filter_variable_limit(data, fastverts, fastedges, iterations, li
         data_sums = np.zeros(data_sums.shape)
         connections = np.zeros(connections.shape)
 
-        per_vert = data[edge_b] / edgelength
+        per_vert = data[edge_b] * coeff
         safe_bincount(edge_a, per_vert, data_sums, connections)
         eb_smooth = data_sums / connections
 
-        per_vert = eb_smooth[edge_a] / edgelength
+        per_vert = eb_smooth[edge_a] * coeff
         safe_bincount(edge_b, per_vert, data_sums, connections)
 
         new_data = data_sums / connections
@@ -306,11 +308,11 @@ def mesh_smooth_filter_variable_limit(data, fastverts, fastedges, iterations, li
         data_sums = np.zeros(data_sums.shape)
         connections = np.zeros(connections.shape)
 
-        per_vert = data[edge_a] / edgelength
+        per_vert = data[edge_a] * coeff
         safe_bincount(edge_b, per_vert, data_sums, connections)
         ea_smooth = data_sums / connections
 
-        per_vert = ea_smooth[edge_b] / edgelength
+        per_vert = ea_smooth[edge_b] * coeff
         safe_bincount(edge_a, per_vert, data_sums, connections)
 
         new_data += data_sums / connections
