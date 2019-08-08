@@ -95,7 +95,8 @@ class PanelBuilder:
 
                     for cat in this.draw_order.keys():
                         col = mcol.box().column(align=True)
-                        col.label(text=cat)
+                        if len(cat) > 0:
+                            col.label(text=cat)
                         for mop in this.draw_order[cat]:
                             split = col.split(factor=0.15, align=True)
                             opname = "panel_" + mop.prefix
@@ -135,10 +136,12 @@ class PanelBuilder:
             bpy.utils.register_class(mesh_op.op)
             for k, v in mesh_op.props.items():
                 ConstructedPG.__annotations__[mesh_op.prefix + "_" + k] = v
+                # print("pm:", mesh_op.prefix, "_", k, "=", v)
 
         # register panel values
         for k, v in self.panel.items():
             ConstructedPG.__annotations__["panel_" + k] = v
+            # print("pi:", "panel_", k, "=", v)
 
         # register panel
         bpy.utils.register_class(self.panel_class)
