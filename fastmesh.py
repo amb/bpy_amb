@@ -75,9 +75,23 @@ def read_verts(mesh):
 
 
 def read_edges(mesh):
-    fastedges = np.zeros((len(mesh.edges) * 2), dtype=np.int)  # [0.0, 0.0] * len(mesh.edges)
+    fastedges = np.zeros((len(mesh.edges) * 2), dtype=np.int)
     mesh.edges.foreach_get("vertices", fastedges)
     return np.reshape(fastedges, (len(mesh.edges), 2))
+
+
+def read_verts_bm(bm):
+    mverts_co = np.zeros((len(bm.verts), 3), dtype=np.float)
+    for i, v in enumerate(bm.verts):
+        mverts_co[i] = np.array(v.co)
+    return mverts_co
+
+
+def read_edges_bm(bm):
+    fastedges = np.zeros((len(bm.edges), 2), dtype=np.int)
+    for i, e in enumerate(bm.edges):
+        fastedges[i] = np.array([e.verts[0].index, e.verts[1].index])
+    return fastedges
 
 
 def read_norms(mesh):
@@ -239,6 +253,58 @@ def mesh_smooth_filter_variable(data, fastverts, fastedges, iterations):
     # longer the edge distance to datapoint, less it has influence
 
     for _ in range(iterations):
+        # step 1
+        data_sums = np.zeros(data_sums.shape)
+        connections = np.zeros(connections.shape)
+
+        per_vert = data[edge_b] / edgelength
+        safe_bincount(edge_a, per_vert, data_sums, connections)
+        eb_smooth = data_sums / connections
+
+        per_vert = eb_smooth[edge_a] / edgelength
+        safe_bincount(edge_b, per_vert, data_sums, connections)
+
+        new_data = data_sums / connections
+
+        # step 2
+        data_sums = np.zeros(data_sums.shape)
+        connections = np.zeros(connections.shape)
+
+        per_vert = data[edge_a] / edgelength
+        safe_bincount(edge_b, per_vert, data_sums, connections)
+        ea_smooth = data_sums / connections
+
+        per_vert = ea_smooth[edge_b] / edgelength
+        safe_bincount(edge_a, per_vert, data_sums, connections)
+
+        new_data += data_sums / connections
+        new_data /= 2.0
+
+        data = new_data
+
+    return new_data
+
+
+def mesh_smooth_filter_variable_limit(data, fastverts, fastedges, iterations, limit):
+    """ Smooths variables in data [0, 1] over the mesh topology """
+
+    if iterations <= 0:
+        return data
+
+    # vert indices of edges
+    edge_a, edge_b = fastedges[:, 0], fastedges[:, 1]
+    tvlen = np.linalg.norm(fastverts[edge_b] - fastverts[edge_a], axis=1)
+    edgelength = np.where(tvlen < 1, 1.0, tvlen)
+
+    data_sums = np.zeros(data.shape, dtype=np.float)
+    connections = np.zeros(data.shape[0], dtype=np.float)
+
+    # longer the edge distance to datapoint, less it has influence
+    protect = data.copy()
+
+    for _ in range(iterations):
+        data = np.where(protect > limit, protect, data)
+
         # step 1
         data_sums = np.zeros(data_sums.shape)
         connections = np.zeros(connections.shape)
