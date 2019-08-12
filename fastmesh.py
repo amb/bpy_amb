@@ -269,6 +269,40 @@ def mesh_smooth_filter_variable(data, fastverts, fastedges, iterations):
     return new_data
 
 
+def mesh_data_laplacian(data, coeff, fastedges):
+    """ Data [0, 1] mesh Laplacian """
+
+    edge_a, edge_b = fastedges[:, 0], fastedges[:, 1]
+
+    data_sums = np.zeros(data.shape[0], dtype=np.float)
+    totals = np.zeros(data.shape[0], dtype=np.float)
+
+    np.add.at(data_sums, edge_a, data[edge_b] * coeff[edge_b])
+    np.add.at(data_sums, edge_b, data[edge_a] * coeff[edge_a])
+
+    np.add.at(totals, edge_a, coeff[edge_b])
+    np.add.at(totals, edge_b, coeff[edge_a])
+
+    return data_sums / totals - data
+
+def mesh_data_laplacian_simple(data, fastedges):
+    """ Data [0, 1] mesh Laplacian """
+
+    edge_a, edge_b = fastedges[:, 0], fastedges[:, 1]
+
+    data_sums = np.zeros(data.shape[0], dtype=np.float)
+    totals = np.zeros(data.shape[0], dtype=np.float)
+
+    np.add.at(data_sums, edge_a, data[edge_b])
+    np.add.at(data_sums, edge_b, data[edge_a])
+
+    np.add.at(totals, edge_a, 1)
+    np.add.at(totals, edge_b, 1)
+
+    return data_sums / totals - data
+
+
+
 def mesh_smooth_filter_variable_limit(data, fastverts, fastedges, iterations, limit):
     """ Smooths variables in data [0, 1] over the mesh topology """
 
