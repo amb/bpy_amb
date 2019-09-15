@@ -3,7 +3,7 @@ import zlib
 import numpy as np
 
 
-def img_compress(img):
+def compress_to_string(img):
     """ Compresses RGBA image array from Numpy into a string """
     if img.shape[0] > 32 or img.shape[1] > 32 or img.shape[0] < 8 or img.shape[1] < 8:
         print("Wrong image size. Required: width = [8, 32], height = [8, 32]")
@@ -22,7 +22,7 @@ def img_compress(img):
     return repr(img.shape[0]) + "," + repr(img.shape[1]) + "," + encoded.decode("utf-8")
 
 
-def img_decompress(inp):
+def decompress_from_string(inp):
     """ Unpacks a string into a Numpy RGBA image array """
     vals = inp.split(",")
     w, h = int(vals[0]), int(vals[1])
