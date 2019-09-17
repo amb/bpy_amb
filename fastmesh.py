@@ -285,6 +285,7 @@ def mesh_data_laplacian(data, coeff, fastedges):
 
     return data_sums / totals - data
 
+
 def mesh_data_laplacian_simple(data, fastedges):
     """ Data [0, 1] mesh Laplacian """
 
@@ -300,7 +301,6 @@ def mesh_data_laplacian_simple(data, fastedges):
     np.add.at(totals, edge_b, 1)
 
     return data_sums / totals - data
-
 
 
 def mesh_smooth_filter_variable_limit(data, fastverts, fastedges, iterations, limit):

@@ -2,6 +2,11 @@ import numpy as np
 import mathutils as mu
 
 
+def tri_ori(p1, p2, p3):
+    # skip colinearity test
+    return (p2[1] - p1[1]) * (p3[0] - p2[0]) - (p2[0] - p1[0]) * (p3[1] - p2[1]) > 0
+
+
 def rotate_object(obj, q, point):
     R = q.to_matrix().to_4x4()
     T = mu.Matrix.Translation(point)
