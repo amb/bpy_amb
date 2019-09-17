@@ -98,22 +98,32 @@ class PanelBuilder:
                         if len(cat) > 0:
                             col.label(text=cat)
                         for mop in this.draw_order[cat]:
-                            split = col.split(factor=0.15, align=True)
                             opname = "panel_" + mop.prefix
+                            optext = " ".join(mop.prefix.split("_")).capitalize()
 
-                            if len(mop.props) == 0:
-                                split.prop(pgroup, opname, text="", icon="DOT")
-                            else:
-                                if getattr(pgroup, opname):
-                                    split.prop(pgroup, opname, text="", icon="DOWNARROW_HLT")
+                            if not mop.always_open:
+                                split = col.split(factor=0.15, align=True)
+                                if len(mop.props) == 0:
+                                    split.prop(pgroup, opname, text="", icon="DOT")
                                 else:
-                                    split.prop(pgroup, opname, text="", icon="RIGHTARROW")
+                                    if getattr(pgroup, opname):
+                                        split.prop(pgroup, opname, text="", icon="DOWNARROW_HLT")
+                                    else:
+                                        split.prop(pgroup, opname, text="", icon="RIGHTARROW")
 
-                            split.operator(
-                                mop.op.bl_idname, text=" ".join(mop.prefix.split("_")).capitalize()
-                            )
+                                split.operator(mop.op.bl_idname, text=optext)
 
-                            if getattr(pgroup, opname):
+                                if getattr(pgroup, opname):
+                                    # operator opened, draw properties
+                                    box = col.column(align=True).box().column()
+                                    for i, p in enumerate(mop.props):
+                                        # if i % 2 == 0:
+                                        #     row = box.row(align=True)
+                                        row = box.row(align=True)
+                                        row.prop(pgroup, mop.prefix + "_" + p)
+                            else:
+                                # always open
+                                col.operator(mop.op.bl_idname, text=optext)
                                 box = col.column(align=True).box().column()
                                 for i, p in enumerate(mop.props):
                                     # if i % 2 == 0:
@@ -177,6 +187,7 @@ class OperatorGenerator:
         self.prefix = ""
         self.info = ""
         self.category = ""
+        self.always_open = False
 
     def init_end(self):
         self.name = "".join(i.capitalize() for i in self.prefix.split("_"))
