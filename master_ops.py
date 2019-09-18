@@ -123,8 +123,8 @@ class PanelBuilder:
                                         row.prop(pgroup, mop.prefix + "_" + p)
                             else:
                                 # always open
-                                col.operator(mop.op.bl_idname, text=optext)
-                                box = col.column(align=True).box().column()
+                                box = col.column()
+                                box.operator(mop.op.bl_idname, text=optext)
                                 for i, p in enumerate(mop.props):
                                     # if i % 2 == 0:
                                     #     row = box.row(align=True)
