@@ -16,6 +16,7 @@ Created Date: Monday, June 17th 2019, 5:39:09 pm
 Copyright: Tommi Hyppänen
 """
 
+import re
 import bpy  # noqa:F401
 import numpy as np  # noqa:F401
 import bmesh  # noqa:F401
@@ -74,14 +75,12 @@ class PanelBuilder:
 
         # The main panel
         def ptbuild(this):
-            class _pt(bpy.types.Panel):
-                bl_label = " ".join([i.capitalize() for i in this.master_name.split("_")])
-                bl_idname = (
-                    p_idname
-                    + "_PT_"
-                    + "".join([i.capitalize() for i in this.master_name.split("_")])
-                    + "_panel"
-                )
+            main_name = [i.capitalize() for i in this.master_name.split("_")]
+            parent_name = p_idname + "_PT_" + "".join(main_name) + "_panel"
+            
+            class _pt_base(bpy.types.Panel):
+                bl_label = " ".join(main_name)
+                bl_idname = parent_name
 
                 bl_space_type = p_spacetype
                 bl_region_type = p_regiontype
@@ -89,41 +88,59 @@ class PanelBuilder:
 
                 # self here is actually the inner context, self of the built class
                 def draw(self, context):
-                    layout = self.layout
-                    mcol = layout
+                    pass
+                    # layout = self.layout
+                    # layout.row().label(text="0")
+
+            return _pt_base
+
+        def ptbuild2(this, cat, parent_name):
+
+            draw_ops = list(this.draw_order[cat])
+
+            class _pt_tmp(bpy.types.Panel):
+                bl_label = cat.capitalize()
+                # make into alphanumeric
+                bl_idname = parent_name[:-6] + "_" + re.sub(r"\W+", "", cat.capitalize())
+                bl_parent_id = parent_name
+                bl_options = {"DEFAULT_CLOSED"}
+
+                bl_space_type = p_spacetype
+                bl_region_type = p_regiontype
+                bl_category = p_category
+
+                def draw(self, context):
                     pgroup = getattr(context.scene, this.master_name)
+                    col = self.layout.column(align=True)
+                    for mop in draw_ops:
+                        split = col.split(factor=0.15, align=True)
+                        opname = "panel_" + mop.prefix
 
-                    for cat in this.draw_order.keys():
-                        col = mcol.box().column(align=True)
-                        if len(cat) > 0:
-                            col.label(text=cat)
-                        for mop in this.draw_order[cat]:
-                            split = col.split(factor=0.15, align=True)
-                            opname = "panel_" + mop.prefix
-
-                            if len(mop.props) == 0:
-                                split.prop(pgroup, opname, text="", icon="DOT")
-                            else:
-                                if getattr(pgroup, opname):
-                                    split.prop(pgroup, opname, text="", icon="DOWNARROW_HLT")
-                                else:
-                                    split.prop(pgroup, opname, text="", icon="RIGHTARROW")
-
-                            split.operator(
-                                mop.op.bl_idname, text=" ".join(mop.prefix.split("_")).capitalize()
-                            )
-
+                        if len(mop.props) == 0:
+                            split.prop(pgroup, opname, text="", icon="DOT")
+                        else:
                             if getattr(pgroup, opname):
-                                box = col.column(align=True).box().column()
-                                for i, p in enumerate(mop.props):
-                                    # if i % 2 == 0:
-                                    #     row = box.row(align=True)
-                                    row = box.row(align=True)
-                                    row.prop(pgroup, mop.prefix + "_" + p)
+                                split.prop(pgroup, opname, text="", icon="DOWNARROW_HLT")
+                            else:
+                                split.prop(pgroup, opname, text="", icon="RIGHTARROW")
 
-            return _pt
+                        split.operator(
+                            mop.op.bl_idname, text=" ".join(mop.prefix.split("_")).capitalize()
+                        )
 
-        self.panel_class = ptbuild(self)
+                        if getattr(pgroup, opname):
+                            box = col.column(align=True).box().column()
+                            for i, p in enumerate(mop.props):
+                                row = box.row(align=True)
+                                row.prop(pgroup, mop.prefix + "_" + p)
+
+            return _pt_tmp
+
+        self.panel_classes = [ptbuild(self)]
+        parent_name = self.panel_classes[0].bl_idname
+        for cat in self.draw_order.keys():
+            self.panel_classes.append(ptbuild2(self, cat, parent_name))
+
 
     def register_params(self):
         class ConstructedPG(bpy.types.PropertyGroup):
@@ -144,7 +161,8 @@ class PanelBuilder:
             # print("pi:", "panel_", k, "=", v)
 
         # register panel
-        bpy.utils.register_class(self.panel_class)
+        for c in self.panel_classes:
+            bpy.utils.register_class(c)
 
         # register property group
         bpy.utils.register_class(ConstructedPG)
@@ -154,7 +172,8 @@ class PanelBuilder:
     def unregister_params(self):
         for mesh_op in self.mesh_ops:
             bpy.utils.unregister_class(mesh_op.op)
-        bpy.utils.unregister_class(self.panel_class)
+        for c in self.panel_classes:
+            bpy.utils.unregister_class(c)
         delattr(bpy.types.Scene, self.master_name)
 
 
