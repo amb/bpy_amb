@@ -429,3 +429,55 @@ class Bmesh_from_edit:
 
     def __exit__(self, type, value, traceback):
         bmesh.update_edit_mesh(self.mesh)
+
+
+def radial_edges(iv):
+    loop = iv.link_loops[0]
+    eg = []
+    while True:
+        eg.append(loop.edge)
+        loop = loop.link_loop_radial_next.link_loop_next
+        if loop.edge == eg[0]:
+            break
+    return eg
+
+
+def delaunay_criterion(bm, max_iter=100):
+    """ Basically the same as beautify faces """
+    bm.edges.ensure_lookup_table()
+    bm.faces.ensure_lookup_table()
+    prev_flips = -1
+    count = 0
+    edge_set = set([e for e in bm.edges])
+    while True:
+        modified = set([])
+        flips = 0
+
+        for e in edge_set:
+            f = e.link_faces
+            if len(f) == 2 and len(f[0].verts) == 3 and len(f[1].verts) == 3:
+                ev0, ev1 = e.verts
+                l0 = next(i for i in f[0].loops if i.vert != ev0 and i.vert != ev1)
+                l1 = next(i for i in f[1].loops if i.vert != ev0 and i.vert != ev1)
+                a0 = l0.calc_angle()
+                a1 = l1.calc_angle()
+                if a0 + a1 > np.pi:
+                    for nev in e.verts:
+                        modified.add(nev)
+                    ne = bmesh.utils.edge_rotate(e, True)
+                    if ne:
+                        for nev in ne.verts:
+                            modified.add(nev)
+                    flips += 1
+
+        count += 1
+
+        if flips == prev_flips or count > max_iter:
+            break
+        prev_flips = flips
+
+        edge_set.clear()
+        for v in modified:
+            for e in v.link_edges:
+                edge_set.add(e)
+

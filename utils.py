@@ -17,7 +17,7 @@ import bpy
 import cProfile
 import pstats
 import io
-
+import tracemalloc
 
 # TODO:
 # implement proper handling of "from X import Y as Z" handling
@@ -58,6 +58,7 @@ def keep_updated(lc, libs, verbose=False):
 
 def install_lib(libname):
     from subprocess import call
+
     pp = bpy.app.binary_path_python
     call([pp, "-m", "ensurepip", "--user"])
     call([pp, "-m", "pip", "install", "--user", libname])
@@ -109,3 +110,22 @@ class Mode_set:
     def __exit__(self, type, value, traceback):
         if self.changed:
             bpy.ops.object.mode_set(mode=self.prev_mode)
+
+
+tracemalloc_start = None
+
+
+def memorytrace_start():
+    global tracemalloc_start
+    if tracemalloc_start == None:
+        print("Begin memorytrace")
+        tracemalloc.start()
+        tracemalloc_start = tracemalloc.take_snapshot()
+
+
+def memorytrace_print():
+    global tracemalloc_start
+    snapshot = tracemalloc.take_snapshot()
+    top_stats = snapshot.compare_to(tracemalloc_start, "lineno")
+    for stat in top_stats[:10]:
+        print(stat)

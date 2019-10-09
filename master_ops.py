@@ -26,7 +26,9 @@ import mathutils as mu  # noqa:F401
 
 class PanelBuilder:
     def __init__(self, master_name, input_ops, p_idname, p_spacetype, p_regiontype, p_category):
-        mesh_ops = [i(master_name) for i in input_ops]
+        mesh_ops = []
+        for i in input_ops:
+            mesh_ops.append(i(master_name))
 
         # inject panel functionality into operators
         def _inject(cl):
@@ -196,6 +198,7 @@ class OperatorGenerator:
         self.prefix = ""
         self.info = ""
         self.category = ""
+        self.always_open = False
 
     def init_end(self):
         self.name = "".join(i.capitalize() for i in self.prefix.split("_"))
@@ -215,6 +218,7 @@ class OperatorGenerator:
                 "payload": self.payload,
             },
         )
+        # TODO: copy functions from generate() super class, for less tabs for _pl
         setattr(self.op, "__annotations__", {})
         for k, v in self.props.items():
             self.op.__annotations__[k] = v
