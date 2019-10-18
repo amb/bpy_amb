@@ -17,6 +17,7 @@ from collections import defaultdict
 import numpy as np
 import bmesh
 from . import fastmesh as afm
+from . import bbmesh as abm
 
 # test
 
@@ -481,3 +482,51 @@ def delaunay_criterion(bm, max_iter=100):
             for e in v.link_edges:
                 edge_set.add(e)
 
+
+def cotan(a, b):
+    # va, vb = a, b
+    # t = va.x * vb.z - va.z * vb.x
+    # return 0.0 if t == 0.0 else (va.x * vb.x + va.z * vb.z) / t
+    t = (a.cross(b)).length
+    return 0.0 if t == 0.0 else (a.dot(b)) / t
+
+
+def cotan_weights(bm, s_verts):
+    # radially sorted 1-ring/valence of each vert
+    rad_v = {}
+    for v in s_verts:
+        re = abm.radial_edges(v)
+        rad_v[v] = [e.other_vert(v) for e in re]
+
+    # cotan weights
+    cot_eps = 1e-5
+    cot_max = np.cos(cot_eps) / np.sin(cot_eps)
+    print("cot_max:", cot_max)
+    v_wg = {}
+    v_area = {}
+    min_area = 1.0e10
+    mm = 1 / 3
+    for v in s_verts:
+        wgs = []
+        rv_v = rad_v[v]
+        v_area[v] = mm * sum(f.calc_area() for f in v.link_faces)
+        if v_area[v] < min_area:
+            min_area = v_area[v]
+        for ri, rv in enumerate(rad_v[v]):
+            pv = rv_v[(ri - 1) % len(rv_v)]
+            nv = rv_v[(ri + 1) % len(rv_v)]
+            cv = rv_v[ri]
+            v0 = cv.co - v.co
+            vb = pv.co - v.co
+            va = nv.co - v.co
+            cot_a = cotan(v0 - va, -va)
+            cot_b = cotan(v0 - vb, -vb)
+            wg = cot_a + cot_b
+            if wg > cot_max:
+                wg = cot_max
+            if wg < -cot_max:
+                wg = -cot_max
+            wgs.append(wg)
+        v_wg[v] = wgs
+
+    return v_wg, v_area, min_area, rad_v
