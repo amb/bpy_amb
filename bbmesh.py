@@ -512,6 +512,7 @@ def cotan_weights(bm, s_verts):
         v_area[v] = mm * sum(f.calc_area() for f in v.link_faces)
         if v_area[v] < min_area:
             min_area = v_area[v]
+        totw = 0.0
         for ri, rv in enumerate(rad_v[v]):
             pv = rv_v[(ri - 1) % len(rv_v)]
             nv = rv_v[(ri + 1) % len(rv_v)]
@@ -527,6 +528,7 @@ def cotan_weights(bm, s_verts):
             if wg < -cot_max:
                 wg = -cot_max
             wgs.append(wg)
-        v_wg[v] = wgs
+            totw += wg
+        v_wg[v] = [w / totw for w in wgs]
 
     return v_wg, v_area, min_area, rad_v
