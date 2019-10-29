@@ -31,3 +31,5 @@ command = (
     ' -xr!"*.txt"'
     ' -xr!"*.zip"'.format(addon_name, version_number)
 )
+
+os.system(command)
