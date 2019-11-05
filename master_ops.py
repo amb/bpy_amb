@@ -131,7 +131,7 @@ class PanelBuilder:
                         )
 
                         if getattr(pgroup, opname):
-                            box = col.column(align=True).box().column()
+                            box = col.column(align=True).box().column(align=True)
                             for i, p in enumerate(mop.props):
                                 row = box.row(align=True)
                                 row.prop(pgroup, mop.prefix + "_" + p)
