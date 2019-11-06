@@ -119,7 +119,8 @@ class PanelBuilder:
                         opname = "panel_" + mop.prefix
 
                         if len(mop.props) == 0:
-                            split.prop(pgroup, opname, text="", icon="DOT")
+                            split.label(text="")
+                            #split.prop(pgroup, opname, text="", icon="DOT")
                         else:
                             if getattr(pgroup, opname):
                                 split.prop(pgroup, opname, text="", icon="DOWNARROW_HLT")
