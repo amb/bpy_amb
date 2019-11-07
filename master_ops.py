@@ -25,10 +25,22 @@ import mathutils as mu  # noqa:F401
 
 
 class PanelBuilder:
-    def __init__(self, master_name, input_ops, p_idname, p_spacetype, p_regiontype, p_category):
+    def __init__(
+        self,
+        master_name,
+        input_ops,
+        p_panel_draw,
+        p_panel_props,
+        p_idname,
+        p_spacetype,
+        p_regiontype,
+        p_category,
+    ):
         mesh_ops = []
         for i in input_ops:
             mesh_ops.append(i(master_name))
+
+        self.panel_props = p_panel_props
 
         # inject panel functionality into operators
         def _inject(cl):
@@ -79,7 +91,7 @@ class PanelBuilder:
         def ptbuild(this):
             main_name = [i.capitalize() for i in this.master_name.split("_")]
             parent_name = p_idname + "_PT_" + "".join(main_name) + "_panel"
-            
+
             class _pt_base(bpy.types.Panel):
                 bl_label = " ".join(main_name)
                 bl_idname = parent_name
@@ -90,9 +102,7 @@ class PanelBuilder:
 
                 # self here is actually the inner context, self of the built class
                 def draw(self, context):
-                    pass
-                    # layout = self.layout
-                    # layout.row().label(text="0")
+                    p_panel_draw(self, context)
 
             return _pt_base
 
@@ -120,7 +130,7 @@ class PanelBuilder:
 
                         if len(mop.props) == 0:
                             split.label(text="")
-                            #split.prop(pgroup, opname, text="", icon="DOT")
+                            # split.prop(pgroup, opname, text="", icon="DOT")
                         else:
                             if getattr(pgroup, opname):
                                 split.prop(pgroup, opname, text="", icon="DOWNARROW_HLT")
@@ -144,7 +154,6 @@ class PanelBuilder:
         for cat in self.draw_order.keys():
             self.panel_classes.append(ptbuild2(self, cat, parent_name))
 
-
     def register_params(self):
         class ConstructedPG(bpy.types.PropertyGroup):
             pass
@@ -162,6 +171,9 @@ class PanelBuilder:
         for k, v in self.panel.items():
             ConstructedPG.__annotations__["panel_" + k] = v
             # print("pi:", "panel_", k, "=", v)
+
+        for k, v in self.panel_props.items():
+            ConstructedPG.__annotations__["global_" + k] = v
 
         # register panel
         for c in self.panel_classes:
