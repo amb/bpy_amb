@@ -1,6 +1,8 @@
 import re
 import os
 
+# run this from the addon root, not from inside bpy_amb
+
 addon_name = None
 
 try:
@@ -18,18 +20,20 @@ with open("__init__.py", "r") as f:
     # result = eval(compile(data, '', 'exec'))
     # print(dir(result))
 
+from pathlib import Path
 
+dir_path = Path.cwd().stem
 addon_name = addon_name.replace(" ", "_")
 version_number = ".".join(version_number)
 print("name: {}, version:{}".format(addon_name, version_number))
 command = (
-    "7z a {}_{}.zip ."
+    "7z a {}_{}.zip ..\\{}\\"
     ' -xr!"__pycache__"'
     ' -xr!"export"'
     ' -xr!".*"'
     ' -xr!"*.bat"'
     ' -xr!"*.txt"'
-    ' -xr!"*.zip"'.format(addon_name, version_number)
+    ' -xr!"*.zip"'.format(addon_name, version_number, dir_path)
 )
 
 os.system(command)
