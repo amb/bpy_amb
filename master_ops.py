@@ -35,12 +35,14 @@ class PanelBuilder:
         p_spacetype,
         p_regiontype,
         p_category,
+        additional_classes,
     ):
         mesh_ops = []
         for i in input_ops:
             mesh_ops.append(i(master_name))
 
         self.panel_props = p_panel_props
+        self.additional_classes = additional_classes
 
         # inject panel functionality into operators
         def _inject(cl):
@@ -106,6 +108,7 @@ class PanelBuilder:
 
             return _pt_base
 
+        # individual categories (each category can have one or more operators)
         def ptbuild2(this, cat, parent_name):
 
             draw_ops = list(this.draw_order[cat])
@@ -160,6 +163,10 @@ class PanelBuilder:
 
         setattr(ConstructedPG, "__annotations__", {})
 
+        # additional libs
+        for c in self.additional_classes:
+            bpy.utils.register_class(c)
+
         # register operators
         for mesh_op in self.mesh_ops:
             bpy.utils.register_class(mesh_op.op)
@@ -185,6 +192,8 @@ class PanelBuilder:
         setattr(bpy.types.Scene, self.master_name, bpy.props.PointerProperty(type=ConstructedPG))
 
     def unregister_params(self):
+        for c in self.additional_classes:
+            bpy.utils.unregister_class(c)
         for mesh_op in self.mesh_ops:
             bpy.utils.unregister_class(mesh_op.op)
         for c in self.panel_classes:
