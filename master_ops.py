@@ -104,7 +104,8 @@ class PanelBuilder:
 
                 # self here is actually the inner context, self of the built class
                 def draw(self, context):
-                    p_panel_draw(self, context)
+                    if p_panel_draw:
+                        p_panel_draw(self, context)
 
             return _pt_base
 
