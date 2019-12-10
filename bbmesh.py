@@ -433,11 +433,18 @@ class Bmesh_from_edit:
 
 
 def radial_edges(iv):
+    if len(iv.link_edges) == 0:
+        return None
+    for e in iv.link_edges:
+        if not e.is_manifold:
+            return None
     loop = iv.link_loops[0]
     eg = []
     while True:
         eg.append(loop.edge)
         loop = loop.link_loop_radial_next.link_loop_next
+        if loop.edge.verts[0] != iv and loop.edge.verts[1] != iv:
+            return None
         if loop.edge == eg[0]:
             break
     return eg
@@ -494,41 +501,69 @@ def cotan(a, b):
 def cotan_weights(bm, s_verts):
     # radially sorted 1-ring/valence of each vert
     rad_v = {}
+    rad_manifold = {}
     for v in s_verts:
         re = abm.radial_edges(v)
-        rad_v[v] = [e.other_vert(v) for e in re]
+        if re is not None:
+            rad_v[v] = [e.other_vert(v) for e in re]
+            rad_manifold[v] = True
+        else:
+            rad_v[v] = [e.other_vert(v) for e in v.link_edges]
+            rad_manifold[v] = False
+
+        assert len(rad_v[v]) == len(v.link_edges)
 
     # cotan weights
+    # print(">cot_wt ", end="")
     cot_eps = 1e-5
     cot_max = np.cos(cot_eps) / np.sin(cot_eps)
-    print("cot_max:", cot_max)
     v_wg = {}
     v_area = {}
     min_area = 1.0e10
     mm = 1 / 3
-    for v in s_verts:
+    non_manifold_verts = []
+    for vid, v in enumerate(s_verts):
+        # print(vid, end=",")
         wgs = []
-        rv_v = rad_v[v]
-        v_area[v] = mm * sum(f.calc_area() for f in v.link_faces)
-        if v_area[v] < min_area:
-            min_area = v_area[v]
-        totw = 0.0
-        for ri, rv in enumerate(rad_v[v]):
-            pv = rv_v[(ri - 1) % len(rv_v)]
-            nv = rv_v[(ri + 1) % len(rv_v)]
-            cv = rv_v[ri]
-            v0 = cv.co - v.co
-            vb = pv.co - v.co
-            va = nv.co - v.co
-            cot_a = cotan(v0 - va, -va)
-            cot_b = cotan(v0 - vb, -vb)
-            wg = cot_a + cot_b
-            if wg > cot_max:
-                wg = cot_max
-            if wg < -cot_max:
-                wg = -cot_max
-            wgs.append(wg)
-            totw += wg
-        v_wg[v] = [w / totw for w in wgs]
+        if rad_manifold[v]:
+            # manifold vertex valence
+            assert len(rad_v) > 0
+            rv_v = rad_v[v]
+            v_area[v] = mm * sum(f.calc_area() for f in v.link_faces)
+            if v_area[v] < min_area:
+                min_area = v_area[v]
+            totw = 0.0
+            for ri, rv in enumerate(rv_v):
+                pv = rv_v[(ri - 1) % len(rv_v)]
+                nv = rv_v[(ri + 1) % len(rv_v)]
+                cv = rv_v[ri]
+                v0 = cv.co - v.co
+                vb = pv.co - v.co
+                va = nv.co - v.co
+                cot_a = cotan(v0 - va, -va)
+                cot_b = cotan(v0 - vb, -vb)
+                wg = cot_a + cot_b
+                if wg > cot_max:
+                    wg = cot_max
+                if wg < -cot_max:
+                    wg = -cot_max
+                wgs.append(wg)
+                totw += wg
+            v_wg[v] = [w / totw for w in wgs]
+        else:
+            # non-manifold vertex valence
+            non_manifold_verts.append(v)
+            # v_area[v] = sum(f.calc_area() for f in v.link_faces)
+            # if v_area[v] <= 0.0:
+            #     # no connected faces
+            #     v_area[v] = 1.0e-10
+            # elif v_area[v] < min_area:
+            #     min_area = v_area[v]
+            vnum = len(v.link_edges)
+            v_wg[v] = [1.0 / vnum for _ in range(vnum)]
+            # for ri, rv in enumerate(e.other_vert(v) for e in v.link_edges):
+
+    for v in non_manifold_verts:
+        v_area[v] = min_area
 
     return v_wg, v_area, min_area, rad_v
