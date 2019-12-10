@@ -433,11 +433,14 @@ class Bmesh_from_edit:
 
 
 def radial_edges(iv):
+    # TODO: accept only meshes with no loose edges or verts
     if len(iv.link_edges) == 0:
-        return None
+        raise Exception("ERROR: Invalid source mesh. Loose verts with no edges.")
     for e in iv.link_edges:
         if not e.is_manifold:
             return None
+        if len(e.link_faces) == 0:
+            raise Exception("ERROR: Invalid source mesh. Wire edges.")
     loop = iv.link_loops[0]
     eg = []
     while True:
@@ -499,6 +502,7 @@ def cotan(a, b):
 
 
 def cotan_weights(bm, s_verts):
+    # TODO: accept only meshes with no loose edges or verts
     # radially sorted 1-ring/valence of each vert
     rad_v = {}
     rad_manifold = {}
