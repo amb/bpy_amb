@@ -28,6 +28,16 @@ def write_colors_bm(vcol_name, values, bm):
             loop[color_layer] = values[loop.vert.index]
 
 
+def write_face_colors_bm(vcol_name, values, bm):
+    color_layer = bm.loops.layers.color.get(vcol_name)
+    if color_layer is None:
+        color_layer = bm.loops.layers.color.new(vcol_name)
+
+    for face in bm.faces:
+        for loop in face.loops:
+            loop[color_layer] = values[face.index]
+
+
 def read_colors_bm(vcol_name, bm):
     color_layer = bm.loops.layers.color.get(vcol_name)
     if color_layer is None:

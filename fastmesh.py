@@ -94,6 +94,13 @@ def read_edges_bm(bm):
     return fastedges
 
 
+def read_norms_bm(bm):
+    fastnorms = np.zeros((len(bm.verts), 3), dtype=np.float)
+    for i, v in enumerate(bm.verts):
+        fastnorms[i] = np.array([*v.normal])
+    return fastnorms
+
+
 def read_norms(mesh):
     mverts_no = np.zeros((len(mesh.vertices) * 3), dtype=np.float)
     mesh.vertices.foreach_get("normal", mverts_no)

@@ -20,7 +20,6 @@
 import mathutils.bvhtree as bvht
 import mathutils as mu
 
-import moderngl
 import numpy as np
 
 bvh = None
@@ -46,6 +45,8 @@ def simple_sample(center, normal):
 
 class Raycaster:
     def __init__(self, tris):
+        import moderngl
+
         # in: rays, tris
         # out: distance, u, v, face index
 
