@@ -106,6 +106,7 @@ class PanelBuilder:
 
             return _pt_base
 
+        # individual categories (each category can have one or more operators)
         def ptbuild2(this, cat, parent_name):
 
             draw_ops = list(this.draw_order[cat])
