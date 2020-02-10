@@ -35,6 +35,7 @@ command = (
     ' -xr!"*.txt"'
     ' -xr!"*.7z"'
     ' -xr!"psutil"'
+    ' -xr!"ignored"'
     ' -xr!"*.zip"'.format(addon_name, version_number, "zip", dir_path)
 )
 
