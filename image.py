@@ -279,7 +279,7 @@ def gaussianize(source, NG=1000):
     transforms = []
 
     t_values = np.arange(NG * 8 + 1) / (NG * 8)
-    t_counts = gauss_curve_np(NG * 4)
+    t_counts = gauss_curve(NG * 4)
     t_quantiles = np.cumsum(t_counts).astype(np.float64)
 
     t_max = 0.0
@@ -345,7 +345,7 @@ def hi_pass_balance(pix, s, zoom):
     pixmax = np.max(pix)
     med = (pixmin + pixmax) / 2
     # TODO: np.mean
-    gas = gaussian_repeat_np(pix - med, s) + med
+    gas = gaussian_repeat(pix - med, s) + med
     pix = (pix - gas) * 0.5 + 0.5
     for c in range(3):
         pix[..., c] = hist_match(
