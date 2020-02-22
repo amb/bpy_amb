@@ -2,6 +2,12 @@ import base64
 import zlib
 import numpy as np
 
+import bpy
+
+# import gpu
+# import bgl
+# import mathutils as mu
+
 # all images are assumed as Numpy RGBA arrays
 
 
@@ -36,43 +42,43 @@ def add_material(name, image):
     return mat
 
 
-def gl_copy(image):
-    if image.gl_load():
-        raise Exception()
+# def gl_copy(image):
+#     if image.gl_load():
+#         raise Exception()
 
-    width, height = image.size
-    offscreen = gpu.types.GPUOffScreen(width, height)
+#     width, height = image.size
+#     offscreen = gpu.types.GPUOffScreen(width, height)
 
-    with offscreen.bind():
-        bgl.glClear(bgl.GL_COLOR_BUFFER_BIT)
-        with gpu.matrix.push_pop():
-            # reset matrices -> use normalized device coordinates [-1, 1]
-            gpu.matrix.load_matrix(mu.Matrix.Identity(4))
-            gpu.matrix.load_projection_matrix(mu.Matrix.Identity(4))
+#     with offscreen.bind():
+#         bgl.glClear(bgl.GL_COLOR_BUFFER_BIT)
+#         with gpu.matrix.push_pop():
+#             # reset matrices -> use normalized device coordinates [-1, 1]
+#             gpu.matrix.load_matrix(mu.Matrix.Identity(4))
+#             gpu.matrix.load_projection_matrix(mu.Matrix.Identity(4))
 
-            shader = gpu.shader.from_builtin("2D_IMAGE")
-            batch = batch_for_shader(
-                shader,
-                "TRI_FAN",
-                {
-                    "pos": ((0, 0), (width - 1, 0), (width - 1, height - 1), (0, height - 1)),
-                    "texCoord": ((0, 0), (1, 0), (1, 1), (0, 1)),
-                },
-            )
+#             shader = gpu.shader.from_builtin("2D_IMAGE")
+#             batch = batch_for_shader(
+#                 shader,
+#                 "TRI_FAN",
+#                 {
+#                     "pos": ((0, 0), (width - 1, 0), (width - 1, height - 1), (0, height - 1)),
+#                     "texCoord": ((0, 0), (1, 0), (1, 1), (0, 1)),
+#                 },
+#             )
 
-            bgl.glActiveTexture(bgl.GL_TEXTURE0)
-            bgl.glBindTexture(bgl.GL_TEXTURE_2D, image.bindcode)
+#             bgl.glActiveTexture(bgl.GL_TEXTURE0)
+#             bgl.glBindTexture(bgl.GL_TEXTURE_2D, image.bindcode)
 
-            shader.bind()
-            shader.uniform_int("image", 0)
-            batch.draw(shader)
+#             shader.bind()
+#             shader.uniform_int("image", 0)
+#             batch.draw(shader)
 
-        buffer = bgl.Buffer(bgl.GL_BYTE, width * height * 4)
-        bgl.glReadBuffer(bgl.GL_BACK)
-        bgl.glReadPixels(0, 0, width, height, bgl.GL_RGBA, bgl.GL_UNSIGNED_BYTE, buffer)
+#         buffer = bgl.Buffer(bgl.GL_BYTE, width * height * 4)
+#         bgl.glReadBuffer(bgl.GL_BACK)
+#         bgl.glReadPixels(0, 0, width, height, bgl.GL_RGBA, bgl.GL_UNSIGNED_BYTE, buffer)
 
-    offscreen.free()
-    return np.array(buffer.to_list()).astype(np.float).reshape((width, height, 4)) / 255.0
+#     offscreen.free()
+#     return np.array(buffer.to_list()).astype(np.float).reshape((width, height, 4)) / 255.0
 
 
 def rgb2hsv(image):
@@ -115,7 +121,7 @@ def compress_to_string(img):
         return None
     icon = []
     flatdim = img.shape[0] * img.shape[1]
-    for v in image.reshape((flatdim, 4)):
+    for v in img.reshape((flatdim, 4)):
         icon.append(int(round(v[0] * 15.0)))
         icon.append(int(round(v[1] * 15.0)))
         icon.append(int(round(v[2] * 7.0)))
