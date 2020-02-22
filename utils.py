@@ -72,11 +72,10 @@ def profiling_start():
     return pr
 
 
-def profiling_end(pr, lines=20):
+def profiling_end(pr, lines=20, sortby="cumulative"):
     # end profile, print results
     pr.disable()
     s = io.StringIO()
-    sortby = "cumulative"
     ps = pstats.Stats(pr, stream=s)
     ps.strip_dirs().sort_stats(sortby).print_stats(lines)
     print(s.getvalue())
@@ -84,15 +83,16 @@ def profiling_end(pr, lines=20):
 
 # with Profile_this
 class Profile_this:
-    def __init__(self, lines=20):
+    def __init__(self, lines=20, sortby="cumulative"):
         self.profile = profiling_start()
         self.lines = lines
+        self.sortby = sortby
 
     def __enter__(self):
         return self.profile
 
     def __exit__(self, type, value, traceback):
-        profiling_end(self.profile, self.lines)
+        profiling_end(self.profile, self.lines, self.sortby)
 
 
 # with Mode_set

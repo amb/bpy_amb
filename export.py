@@ -27,13 +27,16 @@ addon_name = addon_name.replace(" ", "_")
 version_number = ".".join(version_number)
 print("name: {}, version:{}".format(addon_name, version_number))
 command = (
-    "7z a {}_{}.zip ..\\{}\\"
+    "7z a {}_{}.{} ..\\{}\\"
     ' -xr!"__pycache__"'
     ' -xr!"export"'
     ' -xr!".*"'
     ' -xr!"*.bat"'
     ' -xr!"*.txt"'
-    ' -xr!"*.zip"'.format(addon_name, version_number, dir_path)
+    ' -xr!"*.7z"'
+    ' -xr!"psutil"'
+    ' -xr!"ignored"'
+    ' -xr!"*.zip"'.format(addon_name, version_number, "zip", dir_path)
 )
 
 os.system(command)
